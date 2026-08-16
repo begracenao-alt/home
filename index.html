@@ -76,6 +76,28 @@
   textarea:focus{outline:none;border-color:var(--gold-glow);}
   textarea::placeholder{color:rgba(242,236,224,.5);}
 
+  /* 叶った */
+  .grantbtn{
+    margin-top:11px;background:none;border:1px solid var(--line);
+    color:var(--gold);border-radius:999px;padding:8px 20px;
+    font-family:var(--mincho);font-size:14.5px;letter-spacing:.1em;
+  }
+  .granted{
+    margin-top:11px;display:flex;align-items:center;flex-wrap:wrap;gap:9px;
+    background:var(--gold-soft);border:1px solid var(--gold-glow);
+    border-radius:12px;padding:12px 14px;
+  }
+  .granted .gt{font-size:14.5px;color:var(--gold);letter-spacing:.06em;}
+  .granted input{
+    background:none;border:1px solid var(--line);border-radius:999px;
+    color:var(--ink);font-family:var(--mincho);font-size:13px;padding:4px 10px;
+  }
+  .granted button{
+    margin-left:auto;background:none;border:none;color:var(--ink-dim);
+    font-family:var(--mincho);font-size:12.5px;
+    text-decoration:underline;text-underline-offset:4px;padding:4px 0;
+  }
+
   /* 城のしるし */
   .castle{
     margin-top:18px;width:100%;display:flex;align-items:center;gap:13px;
@@ -196,12 +218,12 @@
   .cell.blank{visibility:hidden;}
   .cell.today{border-color:var(--line);}
   .cell.sel{border-color:var(--gold);}
-  .cell.castle{
+  .cell.cst{
     background:radial-gradient(75% 75% at 50% 45%, rgba(216,180,95,.34), rgba(216,180,95,.05));
     border-color:rgba(216,180,95,.42);
     box-shadow:0 0 14px rgba(216,180,95,.20);
   }
-  .cell.castle .n{color:#f6ead0;}
+  .cell.cst .n{color:#f6ead0;}
   .cell .n{position:relative;z-index:1;}
   .dot{
     position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
@@ -281,6 +303,7 @@
     <div class="field">
       <div class="label">今日の意図 <small>ひとつだけ</small></div>
       <textarea id="tIntent" placeholder="ここに、意図をひとつ書く"></textarea>
+      <div id="grant"></div>
     </div>
 
     <button class="castle" id="btnCastle">
@@ -300,11 +323,6 @@
         <button class="addbtn" id="aBtn">入れる</button>
       </div>
       <div class="hint2">時間は、決まっているときだけで大丈夫です</div>
-    </div>
-
-    <div class="field">
-      <div class="label">叶ったこと <small>あれば</small></div>
-      <textarea id="tGranted" placeholder="叶ったことを、ここに置く"></textarea>
     </div>
 
     <div class="saved" id="saved">書きとめました</div>
@@ -378,11 +396,20 @@
     var raw = null;
     try{ raw = JSON.parse(localStorage.getItem(KEY)); }catch(e){}
     if(!raw || typeof raw !== "object") return {days:{}, pool:[]};
-    if(raw.days) {                       // いまの形
-      if(!raw.pool) raw.pool = [];
-      return raw;
-    }
-    return {days: raw, pool: []};        // まえの形からの引きつぎ
+    var st = raw.days ? raw : {days: raw, pool: []};   // まえの形からの引きつぎ
+    if(!st.pool) st.pool = [];
+    // 「叶ったこと（書く欄）」から「叶った日」への引きつぎ
+    Object.keys(st.days).forEach(function(k){
+      var r = st.days[k];
+      if(typeof r.granted === "string"){
+        if(r.granted.trim()){
+          if(!r.grantedOn) r.grantedOn = k;
+          r.grantedText = r.granted;
+        }
+        delete r.granted;
+      }
+    });
+    return st;
   }
   function save(){
     try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){}
@@ -396,13 +423,13 @@
     flashT = setTimeout(function(){ el.classList.remove("show"); }, 1400);
   }
   function rec(d){
-    if(!store.days[d]) store.days[d] = {intent:"", castle:false, granted:"", todos:[]};
+    if(!store.days[d]) store.days[d] = {intent:"", castle:false, grantedOn:"", todos:[]};
     if(!store.days[d].todos) store.days[d].todos = [];
     return store.days[d];
   }
   function get(d){
     var r = store.days[d];
-    return r ? r : {intent:"", castle:false, granted:"", todos:[]};
+    return r ? r : {intent:"", castle:false, grantedOn:"", todos:[]};
   }
   function todosOf(d){
     var r = store.days[d];
@@ -412,7 +439,7 @@
     var r = store.days[d];
     if(!r) return false;
     return !!(r.intent && r.intent.trim()) || r.castle
-        || !!(r.granted && r.granted.trim())
+        || !!r.grantedOn
         || !!(r.todos && r.todos.length);
   }
   function tidy(d){
@@ -448,8 +475,8 @@
 
   /* ---------- 選んでいる日 ---------- */
   var tIntent  = document.getElementById("tIntent");
-  var tGranted = document.getElementById("tGranted");
   var btnCastle= document.getElementById("btnCastle");
+  var grantBox = document.getElementById("grant");
 
   function drawDay(){
     var r = get(sel);
@@ -457,9 +484,9 @@
     document.getElementById("dTag").hidden = (sel !== today);
     document.getElementById("btnToday").hidden = (sel === today);
 
-    tIntent.value  = r.intent  || "";
-    tGranted.value = r.granted || "";
-    grow(tIntent); grow(tGranted);
+    tIntent.value = r.intent || "";
+    grow(tIntent);
+    drawGrant();
 
     var future = sel > today;
     document.getElementById("castleLabel").textContent = future ? "城に還る" : "城に還った";
@@ -483,13 +510,51 @@
       rec(d)[field] = el.value;
       tidy(d);
       save();
+      if(d === sel) drawGrant();
       drawCal(); drawBack();
     }, 400);
   }
   tIntent.addEventListener("input", function(){ onType(tIntent, "intent"); });
-  tGranted.addEventListener("input", function(){ onType(tGranted, "granted"); });
-  tIntent.addEventListener("blur", function(){ rec(sel).intent = tIntent.value; tidy(sel); save(); drawCal(); drawBack(); });
-  tGranted.addEventListener("blur", function(){ rec(sel).granted = tGranted.value; tidy(sel); save(); drawCal(); drawBack(); });
+  tIntent.addEventListener("blur", function(){ rec(sel).intent = tIntent.value; tidy(sel); save(); drawGrant(); drawCal(); drawBack(); });
+
+  /* ---------- 叶った ---------- */
+  function drawGrant(){
+    var r = get(sel);
+    if(!(r.intent && r.intent.trim()) && !r.grantedOn){
+      grantBox.innerHTML = "";
+      return;
+    }
+    if(r.grantedOn){
+      grantBox.innerHTML =
+        '<div class="granted">'
+      +   '<span class="gt">✦ 叶った日</span>'
+      +   '<input type="date" id="gDate" value="'+r.grantedOn+'">'
+      +   '<button id="gUndo">もどす</button>'
+      + '</div>';
+    } else {
+      grantBox.innerHTML = '<button class="grantbtn" id="gBtn">✦ 叶った</button>';
+    }
+  }
+
+  grantBox.addEventListener("click", function(e){
+    if(e.target.id === "gBtn"){
+      rec(sel).grantedOn = today;
+      save();
+      drawGrant(); drawCal(); drawBack();
+    } else if(e.target.id === "gUndo"){
+      rec(sel).grantedOn = "";
+      tidy(sel);
+      save();
+      drawGrant(); drawCal(); drawBack();
+    }
+  });
+
+  grantBox.addEventListener("change", function(e){
+    if(e.target.id !== "gDate" || !e.target.value) return;
+    rec(sel).grantedOn = e.target.value;
+    save();
+    drawGrant(); drawCal(); drawBack();
+  });
 
   btnCastle.addEventListener("click", function(){
     var r = rec(sel);
@@ -651,8 +716,18 @@
   /* ---------- カレンダー ---------- */
   var calGrid = document.getElementById("calGrid");
 
+  function grantedMap(){
+    var m = {};
+    Object.keys(store.days).forEach(function(k){
+      var g = store.days[k].grantedOn;
+      if(g) m[g] = true;
+    });
+    return m;
+  }
+
   function drawCal(){
     var y = +view.slice(0,4), m = +view.slice(5,7);
+    var gm = grantedMap();
     document.getElementById("calMonth").textContent = y + "年" + m + "月";
 
     var html = "";
@@ -671,13 +746,13 @@
       var key = y + "-" + (m<10?"0":"") + m + "-" + (d<10?"0":"") + d;
       var r = store.days[key] || {};
       var c = "cell";
-      if(r.castle) c += " castle";
+      if(r.castle) c += " cst";
       if(key === today) c += " today";
       if(key === sel)   c += " sel";
       var dotted = (r.intent && r.intent.trim()) || (r.todos && r.todos.length);
       html += '<button class="'+c+'" data-d="'+key+'">'
             +   '<span class="n">'+d+'</span>'
-            +   (r.granted && r.granted.trim() ? '<span class="star">✦</span>' : '')
+            +   (gm[key] ? '<span class="star">✦</span>' : '')
             +   (dotted ? '<span class="dot"></span>' : '')
             + '</button>';
     }
@@ -716,7 +791,7 @@
       var r = store.days[k];
       if(r.intent && r.intent.trim()) ci++;
       if(r.castle) cc++;
-      if(r.granted && r.granted.trim()) cg++;
+      if(r.grantedOn) cg++;
       (r.todos||[]).forEach(function(t){ if(t.done) cd++; });
     });
     document.getElementById("cIntent").textContent  = ci;
@@ -736,7 +811,7 @@
       html += '<button class="item" data-d="'+k+'">'
             +   '<div class="d">'+jp(k)+(r.castle ? "　城" : "")+'</div>'
             +   (r.intent && r.intent.trim() ? '<div class="t">'+esc(r.intent)+'</div>' : '')
-            +   (r.granted && r.granted.trim() ? '<div class="g">✦ '+esc(r.granted)+'</div>' : '')
+            +   (r.grantedOn ? '<div class="g">✦ 叶った　'+jp(r.grantedOn)+(r.grantedText ? '<br>'+esc(r.grantedText) : '')+'</div>' : '')
             +   (done.length ? '<div class="dn">'+done.map(function(t){
                   return "✓ " + esc(t.text);
                 }).join("<br>")+'</div>' : '')
