@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#12141b">
+<title>beautiful state HOME</title>
+<style>
+  :root{
+    --ground:#12141b;
+    --ground2:#191c25;
+    --line:rgba(214,196,150,.22);
+    --line-soft:rgba(214,196,150,.12);
+    --ink:#ece5d6;
+    --ink-dim:rgba(236,229,214,.55);
+    --gold:#d8b45f;
+    --gold-soft:rgba(216,180,95,.16);
+    --gold-glow:rgba(216,180,95,.38);
+    --mincho:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(120% 60% at 50% -10%, rgba(216,180,95,.10), transparent 60%),
+      var(--ground);
+    color:var(--ink);
+    font-family:var(--mincho);
+    line-height:1.85;
+    -webkit-font-smoothing:antialiased;
+    padding:0 0 64px;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:0 20px;}
+
+  /* ------- あたま ------- */
+  header{padding:34px 0 18px;text-align:center;}
+  .logo{
+    font-size:19px;letter-spacing:.22em;color:var(--gold);
+    font-weight:400;margin:0;
+  }
+  .logo-sub{
+    margin:10px 0 0;font-size:12.5px;color:var(--ink-dim);letter-spacing:.08em;
+  }
+  .rule{
+    height:1px;margin:20px 0 0;
+    background:linear-gradient(90deg,transparent,var(--line),transparent);
+  }
+
+  /* ------- 選んでいる日 ------- */
+  .day{padding:26px 0 6px;}
+  .day-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;}
+  .day-date{font-size:27px;letter-spacing:.04em;}
+  .day-tag{
+    font-size:11.5px;color:var(--gold);border:1px solid var(--line);
+    border-radius:999px;padding:2px 10px;letter-spacing:.1em;
+  }
+  .back-today{
+    margin-left:auto;font-size:12px;color:var(--ink-dim);
+    background:none;border:none;font-family:var(--mincho);
+    text-decoration:underline;text-underline-offset:4px;padding:4px 0;
+  }
+
+  .field{margin-top:20px;}
+  .label{
+    font-size:13px;color:var(--gold);letter-spacing:.12em;margin-bottom:8px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .label small{color:var(--ink-dim);font-size:11.5px;letter-spacing:.04em;}
+  textarea{
+    width:100%;min-height:74px;resize:none;overflow:hidden;
+    background:var(--ground2);color:var(--ink);
+    border:1px solid var(--line-soft);border-radius:12px;
+    padding:14px 15px;font-size:16.5px;line-height:1.8;
+    font-family:var(--mincho);
+  }
+  textarea:focus{outline:none;border-color:var(--gold-glow);}
+  textarea::placeholder{color:rgba(236,229,214,.28);}
+
+  /* 城のしるし */
+  .castle{
+    margin-top:18px;width:100%;display:flex;align-items:center;gap:13px;
+    background:var(--ground2);border:1px solid var(--line-soft);
+    border-radius:12px;padding:15px 16px;
+    color:var(--ink);font-family:var(--mincho);font-size:16px;
+    text-align:left;
+  }
+  .castle .mark{
+    width:26px;height:26px;flex:none;border-radius:50%;
+    border:1px solid var(--line);display:grid;place-items:center;
+    font-size:13px;color:transparent;transition:.18s;
+  }
+  .castle.on{border-color:var(--gold-glow);background:var(--gold-soft);}
+  .castle.on .mark{background:var(--gold);border-color:var(--gold);color:#191c25;}
+  .castle .sub{margin-left:auto;font-size:11.5px;color:var(--ink-dim);}
+
+  .saved{
+    height:18px;margin-top:12px;font-size:12px;color:var(--gold);
+    opacity:0;transition:opacity .35s;letter-spacing:.08em;text-align:right;
+  }
+  .saved.show{opacity:1;}
+
+  /* ------- カレンダー ------- */
+  section{margin-top:34px;}
+  .sec-title{
+    font-size:13px;letter-spacing:.16em;color:var(--gold);
+    text-align:center;margin:0 0 16px;
+  }
+  .cal-head{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:14px;}
+  .cal-head button{
+    background:none;border:none;color:var(--ink-dim);font-size:20px;
+    padding:6px 14px;font-family:var(--mincho);
+  }
+  .cal-month{font-size:17px;letter-spacing:.08em;min-width:132px;text-align:center;}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+  .wd{
+    text-align:center;font-size:11px;color:var(--ink-dim);
+    padding-bottom:6px;letter-spacing:.06em;
+  }
+  .wd.sun{color:rgba(226,150,150,.6);}
+  .wd.sat{color:rgba(150,180,226,.6);}
+  .cell{
+    position:relative;height:50px;border-radius:10px;
+    background:transparent;border:1px solid transparent;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--ink);font-family:var(--mincho);font-size:15px;padding:0;
+  }
+  .cell.blank{visibility:hidden;}
+  .cell.other{color:rgba(236,229,214,.2);}
+  .cell.today{border-color:var(--line);}
+  .cell.sel{border-color:var(--gold);}
+  .cell.castle{
+    background:radial-gradient(75% 75% at 50% 45%, rgba(216,180,95,.34), rgba(216,180,95,.05));
+    border-color:rgba(216,180,95,.42);
+    box-shadow:0 0 14px rgba(216,180,95,.20);
+  }
+  .cell.castle .n{color:#f6ead0;}
+  .cell .n{position:relative;z-index:1;}
+  .dot{
+    position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+    width:4px;height:4px;border-radius:50%;background:rgba(236,229,214,.75);
+  }
+  .star{
+    position:absolute;top:4px;right:5px;font-size:10px;color:var(--gold);
+    text-shadow:0 0 6px var(--gold-glow);
+  }
+  .legend{
+    margin-top:16px;display:flex;flex-direction:column;gap:7px;
+    font-size:12px;color:var(--ink-dim);
+  }
+  .legend div{display:flex;align-items:center;gap:9px;}
+  .lg-castle{
+    width:17px;height:17px;border-radius:5px;flex:none;
+    background:radial-gradient(70% 70% at 50% 45%, rgba(216,180,95,.42), rgba(216,180,95,.1));
+  }
+  .lg-dot{width:17px;flex:none;text-align:center;color:rgba(236,229,214,.75);}
+  .lg-star{width:17px;flex:none;text-align:center;color:var(--gold);}
+
+  /* ------- 見返し ------- */
+  .counts{display:flex;gap:10px;margin-bottom:22px;}
+  .count{
+    flex:1;background:var(--ground2);border:1px solid var(--line-soft);
+    border-radius:12px;padding:15px 8px;text-align:center;
+  }
+  .count b{display:block;font-size:25px;color:var(--gold);font-weight:400;line-height:1.3;}
+  .count span{font-size:11.5px;color:var(--ink-dim);letter-spacing:.04em;}
+  .scope{
+    display:flex;justify-content:center;gap:0;margin-bottom:14px;
+    border:1px solid var(--line-soft);border-radius:999px;overflow:hidden;
+  }
+  .scope button{
+    flex:1;background:none;border:none;padding:9px 0;font-size:13px;
+    color:var(--ink-dim);font-family:var(--mincho);letter-spacing:.08em;
+  }
+  .scope button.on{background:var(--gold-soft);color:var(--gold);}
+  .list{display:flex;flex-direction:column;gap:2px;}
+  .item{
+    width:100%;text-align:left;background:none;border:none;
+    border-bottom:1px solid var(--line-soft);
+    padding:14px 2px;font-family:var(--mincho);color:var(--ink);
+  }
+  .item .d{font-size:11.5px;color:var(--gold);letter-spacing:.08em;}
+  .item .t{font-size:15px;margin-top:5px;line-height:1.75;white-space:pre-wrap;}
+  .item .g{
+    font-size:14px;margin-top:7px;color:var(--gold);line-height:1.75;
+    white-space:pre-wrap;padding-left:14px;border-left:1px solid var(--line);
+  }
+  .empty{font-size:13px;color:var(--ink-dim);text-align:center;padding:26px 0;}
+
+  footer{
+    margin-top:44px;text-align:center;font-size:11.5px;color:rgba(236,229,214,.3);
+    letter-spacing:.06em;line-height:2;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1 class="logo">beautiful state HOME</h1>
+    <p class="logo-sub">意図したことは、叶う</p>
+    <div class="rule"></div>
+  </header>
+
+  <!-- 選んでいる日 -->
+  <div class="day">
+    <div class="day-head">
+      <div class="day-date" id="dDate">—</div>
+      <div class="day-tag" id="dTag" hidden>今日</div>
+      <button class="back-today" id="btnToday" hidden>今日にもどる</button>
+    </div>
+
+    <div class="field">
+      <div class="label">今日の意図 <small>ひとつだけ</small></div>
+      <textarea id="tIntent" placeholder="ここに、意図をひとつ書く"></textarea>
+    </div>
+
+    <button class="castle" id="btnCastle">
+      <span class="mark">✓</span>
+      <span id="castleLabel">城に行った</span>
+      <span class="sub" id="castleSub"></span>
+    </button>
+
+    <div class="field">
+      <div class="label">叶ったこと <small>あれば</small></div>
+      <textarea id="tGranted" placeholder="叶ったことを、ここに置く"></textarea>
+    </div>
+
+    <div class="saved" id="saved">書きとめました</div>
+  </div>
+
+  <!-- カレンダー -->
+  <section>
+    <h2 class="sec-title">カレンダー</h2>
+    <div class="cal-head">
+      <button id="prevM" aria-label="前の月">‹</button>
+      <div class="cal-month" id="calMonth">—</div>
+      <button id="nextM" aria-label="次の月">›</button>
+    </div>
+    <div class="grid" id="calGrid"></div>
+    <div class="legend">
+      <div><span class="lg-castle"></span>金色にひかる日 ＝ 城</div>
+      <div><span class="lg-dot">•</span>下の点 ＝ 意図を置いた日</div>
+      <div><span class="lg-star">✦</span>右上の印 ＝ 叶った日</div>
+    </div>
+  </section>
+
+  <!-- 見返し -->
+  <section>
+    <h2 class="sec-title">見返す</h2>
+    <div class="scope">
+      <button id="scMonth" class="on">この月</button>
+      <button id="scAll">はじめから</button>
+    </div>
+    <div class="counts">
+      <div class="count"><b id="cIntent">0</b><span>意図を置いた日</span></div>
+      <div class="count"><b id="cCastle">0</b><span>城</span></div>
+      <div class="count"><b id="cGranted">0</b><span>叶った</span></div>
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <footer>
+    書いたものは、この端末の中だけに残ります<br>
+    beautiful state HOME
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var KEY = "beautiful-state-home-v1";
+  var WD = ["日","月","火","水","木","金","土"];
+
+  var data = load();
+  var today = ymd(new Date());
+  var sel = today;
+  var view = sel.slice(0,7);   // "YYYY-MM"
+  var scope = "month";
+
+  /* ---------- 保存まわり ---------- */
+  function load(){
+    try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }
+    catch(e){ return {}; }
+  }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){}
+    flash();
+  }
+  var flashT;
+  function flash(){
+    var el = document.getElementById("saved");
+    el.classList.add("show");
+    clearTimeout(flashT);
+    flashT = setTimeout(function(){ el.classList.remove("show"); }, 1400);
+  }
+  function rec(d){
+    if(!data[d]) data[d] = {intent:"", castle:false, granted:""};
+    return data[d];
+  }
+  function has(d){
+    var r = data[d];
+    if(!r) return false;
+    return !!(r.intent && r.intent.trim()) || r.castle || !!(r.granted && r.granted.trim());
+  }
+  function tidy(d){
+    var r = data[d];
+    if(r && !has(d)) delete data[d];
+  }
+
+  /* ---------- 日付 ---------- */
+  function ymd(dt){
+    var m = dt.getMonth()+1, d = dt.getDate();
+    return dt.getFullYear() + "-" + (m<10?"0":"") + m + "-" + (d<10?"0":"") + d;
+  }
+  function parse(s){
+    var p = s.split("-");
+    return new Date(+p[0], +p[1]-1, +p[2]);
+  }
+  function jp(s){
+    var dt = parse(s);
+    return (dt.getMonth()+1) + "月" + dt.getDate() + "日（" + WD[dt.getDay()] + "）";
+  }
+
+  /* ---------- 選んでいる日 ---------- */
+  var tIntent  = document.getElementById("tIntent");
+  var tGranted = document.getElementById("tGranted");
+  var btnCastle= document.getElementById("btnCastle");
+
+  function drawDay(){
+    var r = data[sel] || {intent:"", castle:false, granted:""};
+    document.getElementById("dDate").textContent = jp(sel);
+    document.getElementById("dTag").hidden = (sel !== today);
+    document.getElementById("btnToday").hidden = (sel === today);
+
+    tIntent.value  = r.intent  || "";
+    tGranted.value = r.granted || "";
+    grow(tIntent); grow(tGranted);
+
+    var future = sel > today;
+    document.getElementById("castleLabel").textContent = future ? "城に行く" : "城に行った";
+    document.getElementById("castleSub").textContent   = future ? "先に置いておく" : "";
+    btnCastle.classList.toggle("on", !!r.castle);
+  }
+
+  function grow(el){
+    el.style.height = "auto";
+    el.style.height = (el.scrollHeight + 2) + "px";
+  }
+
+  var typeT;
+  function onType(el, field){
+    grow(el);
+    var d = sel;                 // 打っている間に日を変えても、元の日に入るように
+    clearTimeout(typeT);
+    typeT = setTimeout(function(){
+      rec(d)[field] = el.value;
+      tidy(d);
+      save();
+      drawCal(); drawBack();
+    }, 400);
+  }
+  tIntent.addEventListener("input", function(){ onType(tIntent, "intent"); });
+  tGranted.addEventListener("input", function(){ onType(tGranted, "granted"); });
+  tIntent.addEventListener("blur", function(){ rec(sel).intent = tIntent.value; tidy(sel); save(); drawCal(); drawBack(); });
+  tGranted.addEventListener("blur", function(){ rec(sel).granted = tGranted.value; tidy(sel); save(); drawCal(); drawBack(); });
+
+  btnCastle.addEventListener("click", function(){
+    var r = rec(sel);
+    r.castle = !r.castle;
+    tidy(sel);
+    save();
+    drawDay(); drawCal(); drawBack();
+  });
+
+  document.getElementById("btnToday").addEventListener("click", function(){
+    sel = today; view = sel.slice(0,7);
+    drawDay(); drawCal(); drawBack();
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+
+  /* ---------- カレンダー ---------- */
+  var calGrid = document.getElementById("calGrid");
+
+  function drawCal(){
+    var y = +view.slice(0,4), m = +view.slice(5,7);
+    document.getElementById("calMonth").textContent = y + "年" + m + "月";
+
+    var html = "";
+    for(var w=0; w<7; w++){
+      var cls = w===0 ? " sun" : (w===6 ? " sat" : "");
+      html += '<div class="wd'+cls+'">'+WD[w]+'</div>';
+    }
+
+    var first = new Date(y, m-1, 1);
+    var lead = first.getDay();
+    var days = new Date(y, m, 0).getDate();
+
+    for(var i=0; i<lead; i++) html += '<button class="cell blank"></button>';
+
+    for(var d=1; d<=days; d++){
+      var key = y + "-" + (m<10?"0":"") + m + "-" + (d<10?"0":"") + d;
+      var r = data[key] || {};
+      var c = "cell";
+      if(r.castle) c += " castle";
+      if(key === today) c += " today";
+      if(key === sel)   c += " sel";
+      html += '<button class="'+c+'" data-d="'+key+'">'
+            +   '<span class="n">'+d+'</span>'
+            +   (r.granted && r.granted.trim() ? '<span class="star">✦</span>' : '')
+            +   (r.intent  && r.intent.trim()  ? '<span class="dot"></span>'   : '')
+            + '</button>';
+    }
+    calGrid.innerHTML = html;
+  }
+
+  calGrid.addEventListener("click", function(e){
+    var b = e.target.closest(".cell");
+    if(!b || !b.dataset.d) return;
+    sel = b.dataset.d;
+    drawDay(); drawCal();
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+
+  document.getElementById("prevM").addEventListener("click", function(){ shift(-1); });
+  document.getElementById("nextM").addEventListener("click", function(){ shift(1); });
+  function shift(n){
+    var y = +view.slice(0,4), m = +view.slice(5,7) + n;
+    if(m < 1){ m = 12; y--; }
+    if(m > 12){ m = 1; y++; }
+    view = y + "-" + (m<10?"0":"") + m;
+    drawCal(); drawBack();
+  }
+
+  /* ---------- 見返す ---------- */
+  function keys(){
+    var all = Object.keys(data).sort().reverse();
+    if(scope === "all") return all;
+    return all.filter(function(k){ return k.slice(0,7) === view; });
+  }
+
+  function drawBack(){
+    var ks = keys();
+    var ci=0, cc=0, cg=0;
+    ks.forEach(function(k){
+      var r = data[k];
+      if(r.intent && r.intent.trim()) ci++;
+      if(r.castle) cc++;
+      if(r.granted && r.granted.trim()) cg++;
+    });
+    document.getElementById("cIntent").textContent  = ci;
+    document.getElementById("cCastle").textContent  = cc;
+    document.getElementById("cGranted").textContent = cg;
+
+    var list = document.getElementById("list");
+    if(!ks.length){
+      list.innerHTML = '<div class="empty">ここに、置いた意図が集まります</div>';
+      return;
+    }
+    var html = "";
+    ks.forEach(function(k){
+      var r = data[k];
+      var head = jp(k) + (r.castle ? "　城" : "");
+      html += '<button class="item" data-d="'+k+'">'
+            +   '<div class="d">'+head+'</div>'
+            +   (r.intent && r.intent.trim() ? '<div class="t">'+esc(r.intent)+'</div>' : '')
+            +   (r.granted && r.granted.trim() ? '<div class="g">✦ '+esc(r.granted)+'</div>' : '')
+            + '</button>';
+    });
+    list.innerHTML = html;
+  }
+
+  document.getElementById("list").addEventListener("click", function(e){
+    var b = e.target.closest(".item");
+    if(!b) return;
+    sel = b.dataset.d;
+    view = sel.slice(0,7);
+    drawDay(); drawCal(); drawBack();
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+
+  var scM = document.getElementById("scMonth"), scA = document.getElementById("scAll");
+  scM.addEventListener("click", function(){ scope="month"; scM.classList.add("on"); scA.classList.remove("on"); drawBack(); });
+  scA.addEventListener("click", function(){ scope="all";   scA.classList.add("on"); scM.classList.remove("on"); drawBack(); });
+
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];
+    });
+  }
+
+  /* ---------- はじめ ---------- */
+  drawDay(); drawCal(); drawBack();
+})();
+</script>
+</body>
+</html>
