@@ -185,6 +185,11 @@
   }
   .none{font-size:13.5px;color:rgba(242,236,224,.6);padding:12px 2px;}
   .split{height:1px;margin:18px 0 0;background:var(--line-soft);}
+  #newver{
+    position:sticky;top:0;z-index:9;text-align:center;
+    background:var(--gold);color:#191c25;font-family:var(--mincho);
+    font-size:14px;letter-spacing:.06em;padding:12px 16px;line-height:1.6;
+  }
   .poolmsg{
     margin-top:10px;font-size:13px;color:var(--gold);line-height:1.6;
     background:var(--gold-soft);border:1px solid var(--gold-glow);
@@ -296,6 +301,7 @@
 </style>
 </head>
 <body>
+<div id="newver" style="display:none"></div>
 <div class="wrap">
 
   <header>
@@ -388,7 +394,7 @@
 
   <footer>
     書いたものは、この端末の中だけに残ります<br>
-    beautiful state HOME
+    beautiful state HOME　<span id="ver"></span>
   </footer>
 
 </div>
@@ -397,6 +403,7 @@
 (function(){
   "use strict";
 
+  var VER = "v6";
   var KEY = "beautiful-state-home-v1";
   var WD = ["日","月","火","水","木","金","土"];
 
@@ -862,6 +869,22 @@
   var scM = document.getElementById("scMonth"), scA = document.getElementById("scAll");
   scM.addEventListener("click", function(){ scope="month"; scM.classList.add("on"); scA.classList.remove("on"); drawBack(); });
   scA.addEventListener("click", function(){ scope="all";   scA.classList.add("on"); scM.classList.remove("on"); drawBack(); });
+
+  /* ---------- 新しい版のお知らせ ---------- */
+  document.getElementById("ver").textContent = VER;
+  try{
+    fetch(location.pathname + "?t=" + Date.now(), {cache:"no-store"})
+      .then(function(r){ return r.text(); })
+      .then(function(t){
+        var m = t.match(/var VER = "(v\d+)"/);
+        if(!m || m[1] === VER) return;
+        var bar = document.getElementById("newver");
+        bar.textContent = "新しい版があります　ここを押すと入れかわります";
+        bar.style.display = "block";
+        bar.addEventListener("click", function(){ location.reload(); });
+      })
+      .catch(function(){});
+  }catch(e){}
 
   /* ---------- はじめ ---------- */
   drawDay(); drawPool(); drawCal(); drawBack();
