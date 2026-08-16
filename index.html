@@ -179,6 +179,7 @@
     font-family:var(--mincho);font-size:15px;letter-spacing:.06em;
   }
   .none{font-size:13.5px;color:rgba(242,236,224,.6);padding:12px 2px;}
+  .split{height:1px;margin:18px 0 0;background:var(--line-soft);}
   .hint{
     flex:1;align-self:center;font-size:12.5px;color:rgba(242,236,224,.62);
     letter-spacing:.03em;line-height:1.5;
@@ -314,8 +315,7 @@
 
     <div class="field">
       <div class="label">自分のためにすること</div>
-      <div class="todos" id="todos"></div>
-      <div class="addrow">
+      <div class="addrow" style="margin-top:6px">
         <input type="text" id="aText" placeholder="城のカーテンを見に行く">
       </div>
       <div class="addrow">
@@ -323,6 +323,8 @@
         <button class="addbtn" id="aBtn">入れる</button>
       </div>
       <div class="hint2">時間は、決まっているときだけで大丈夫です</div>
+      <div class="split"></div>
+      <div class="todos" id="todos"></div>
     </div>
 
     <div class="saved" id="saved">書きとめました</div>
@@ -331,12 +333,13 @@
   <!-- ためておく -->
   <div class="pool">
     <div class="label">ためておく <small>日はまだ決めていない分</small></div>
-    <div class="none" style="padding-top:0">日を決めると、その日に入ります</div>
-    <div class="todos" id="pool"></div>
-    <div class="addrow">
+    <div class="addrow" style="margin-top:6px">
       <input type="text" id="pText" placeholder="城に買うもの、行きたいところ">
       <button class="addbtn" id="pBtn">入れる</button>
     </div>
+    <div class="hint2">日を決めると、その日に入ります</div>
+    <div class="split"></div>
+    <div class="todos" id="pool"></div>
   </div>
 
   <!-- カレンダー -->
@@ -583,7 +586,7 @@
     var box = document.getElementById("todos");
     var list = sortTodos(todosOf(sel));
     if(!list.length){
-      box.innerHTML = '<div class="none">まだ、なにも入っていません</div>';
+      box.innerHTML = '<div class="none">入れたものが、ここに並びます</div>';
       return;
     }
     var html = "";
@@ -651,7 +654,7 @@
   function drawPool(){
     var box = document.getElementById("pool");
     if(!store.pool.length){
-      box.innerHTML = '<div class="none">思いついたことを、ここへ</div>';
+      box.innerHTML = '<div class="none">入れたものが、ここにたまります</div>';
       return;
     }
     var html = "";
