@@ -257,10 +257,12 @@
   }
   .cell.cst .n{color:#f6ead0;}
   .cell .n{position:relative;z-index:1;}
-  .dot{
-    position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
-    width:4px;height:4px;border-radius:50%;background:rgba(242,236,224,.85);
+  .dots{
+    position:absolute;bottom:6px;left:0;right:0;
+    display:flex;justify-content:center;gap:4px;
   }
+  .dot{width:4.5px;height:4.5px;border-radius:50%;background:rgba(242,236,224,.9);}
+  .dot.g{background:var(--gold);}
   .star{
     position:absolute;top:4px;right:5px;font-size:10px;color:var(--gold);
     text-shadow:0 0 6px var(--gold-glow);
@@ -274,7 +276,8 @@
     width:17px;height:17px;border-radius:5px;flex:none;
     background:radial-gradient(70% 70% at 50% 45%, rgba(216,180,95,.42), rgba(216,180,95,.1));
   }
-  .lg-dot{width:17px;flex:none;text-align:center;color:rgba(242,236,224,.85);}
+  .lg-dot{width:17px;flex:none;text-align:center;color:rgba(242,236,224,.9);}
+  .lg-dot.g{color:var(--gold);}
   .lg-star{width:17px;flex:none;text-align:center;color:var(--gold);}
 
   /* ------- 見返す ------- */
@@ -388,7 +391,8 @@
     <div class="grid" id="calGrid"></div>
     <div class="legend">
       <div><span class="lg-castle"></span>金色にひかる日 ＝ 城</div>
-      <div><span class="lg-dot">•</span>下の点 ＝ 意図を置いた日</div>
+      <div><span class="lg-dot">•</span>白い点 ＝ 意図を置いた日</div>
+      <div><span class="lg-dot g">•</span>金の点 ＝ することがある日</div>
       <div><span class="lg-star">✦</span>右上の印 ＝ 叶った日</div>
     </div>
   </section>
@@ -420,7 +424,7 @@
 (function(){
   "use strict";
 
-  var VER = "v7";
+  var VER = "v8";
   var KEY = "beautiful-state-home-v1";
   var WD = ["日","月","火","水","木","金","土"];
 
@@ -828,11 +832,13 @@
       if(r.castle) c += " cst";
       if(key === today) c += " today";
       if(key === sel)   c += " sel";
-      var dotted = (r.intent && r.intent.trim()) || (r.todos && r.todos.length);
+      var ds = "";
+      if(r.intent && r.intent.trim()) ds += '<span class="dot"></span>';
+      if(r.todos && r.todos.length)   ds += '<span class="dot g"></span>';
       html += '<button class="'+c+'" data-d="'+key+'">'
             +   '<span class="n">'+d+'</span>'
             +   (gm[key] ? '<span class="star">✦</span>' : '')
-            +   (dotted ? '<span class="dot"></span>' : '')
+            +   (ds ? '<span class="dots">'+ds+'</span>' : '')
             + '</button>';
     }
     calGrid.innerHTML = html;
