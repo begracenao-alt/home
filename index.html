@@ -185,6 +185,12 @@
   }
   .none{font-size:13.5px;color:rgba(242,236,224,.6);padding:12px 2px;}
   .split{height:1px;margin:18px 0 0;background:var(--line-soft);}
+  .poolmsg{
+    margin-top:10px;font-size:13px;color:var(--gold);line-height:1.6;
+    background:var(--gold-soft);border:1px solid var(--gold-glow);
+    border-radius:10px;padding:9px 12px;
+  }
+  .op.go{color:var(--gold);border-color:var(--line);}
   .hint{
     flex:1;align-self:center;font-size:12.5px;color:rgba(242,236,224,.62);
     letter-spacing:.03em;line-height:1.5;
@@ -342,7 +348,8 @@
       <input type="text" id="pText" placeholder="城に買うもの、行きたいところ">
       <button class="addbtn" id="pBtn">入れる</button>
     </div>
-    <div class="hint2">日を決めると、その日に入ります</div>
+    <div class="hint2">日を選んで、この日に入れる を押してください</div>
+    <div class="poolmsg" id="poolMsg" style="display:none"></div>
     <div class="split"></div>
     <div class="todos" id="pool"></div>
   </div>
@@ -669,6 +676,7 @@
             +     '<div class="tx">'+esc(t.text)+'</div>'
             +     '<div class="ops">'
             +       '<span class="op date"><input type="date" data-act="pick" aria-label="日を決める"></span>'
+            +       '<button class="op go" data-act="toDay">この日に入れる</button>'
             +       '<button class="op" data-act="del">消す</button>'
             +     '</div>'
             +   '</div>'
@@ -683,30 +691,44 @@
     return store.pool.findIndex(function(t){ return t.id === row.dataset.id; });
   }
 
+  var poolMsgT;
+  function poolMsg(txt){
+    var el = document.getElementById("poolMsg");
+    el.textContent = txt;
+    el.style.display = txt ? "block" : "none";
+    clearTimeout(poolMsgT);
+    if(txt) poolMsgT = setTimeout(function(){ poolMsg(""); }, 5000);
+  }
+
   document.getElementById("pool").addEventListener("click", function(e){
     var b = e.target.closest("[data-act]");
-    if(!b || b.dataset.act !== "del") return;
+    if(!b) return;
     var i = poolIndex(b);
     if(i < 0) return;
-    if(!confirm("消しますか？")) return;
-    store.pool.splice(i,1);
-    save();
-    drawPool();
-  });
 
-  // 日を決めたら、その日へ移して、その日を開く
-  document.getElementById("pool").addEventListener("change", function(e){
-    var inp = e.target.closest('input[data-act="pick"]');
-    if(!inp || !inp.value) return;
-    var i = poolIndex(inp);
-    if(i < 0) return;
-    var d = inp.value;
-    var t = store.pool.splice(i,1)[0];
-    rec(d).todos.push({id:t.id, text:t.text, time:"", done:false});
-    sel = d; view = d.slice(0,7);
-    save();
-    drawDay(); drawPool(); drawCal(); drawBack();
-    window.scrollTo({top:0, behavior:"smooth"});
+    if(b.dataset.act === "del"){
+      if(!confirm("消しますか？")) return;
+      store.pool.splice(i,1);
+      save();
+      drawPool();
+      return;
+    }
+
+    // 日を選んでから、自分で押して決める
+    if(b.dataset.act === "toDay"){
+      var row = b.closest(".todo");
+      var inp = row.querySelector('input[data-act="pick"]');
+      var d = inp ? inp.value : "";
+      if(!d){
+        poolMsg("さきに、日を選んでください");
+        return;
+      }
+      var t = store.pool.splice(i,1)[0];
+      rec(d).todos.push({id:t.id, text:t.text, time:"", done:false});
+      save();
+      drawPool(); drawTodos(); drawCal(); drawBack();
+      poolMsg(t.text + " を " + jp(d) + " に入れました");
+    }
   });
 
   var pText = document.getElementById("pText");
