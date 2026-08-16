@@ -51,6 +51,21 @@
     background:linear-gradient(90deg,transparent,var(--line),transparent);
   }
 
+  /* ------- 今日のこと（開いたら目に入る） ------- */
+  .todaybar{
+    margin-top:22px;background:var(--gold-soft);
+    border:1px solid var(--gold-glow);border-radius:14px;
+    padding:14px 16px 15px;width:100%;text-align:left;
+    font-family:var(--mincho);color:var(--ink);
+  }
+  .todaybar .tt{font-size:12.5px;color:var(--gold);letter-spacing:.16em;}
+  .todaybar .tl{font-size:15.5px;line-height:1.75;margin-top:8px;}
+  .todaybar .tmm{
+    font-size:12.5px;color:var(--gold);letter-spacing:.06em;
+    border:1px solid var(--line);border-radius:999px;
+    padding:1px 8px;margin-right:8px;white-space:nowrap;
+  }
+
   /* ------- 選んでいる日 ------- */
   .day{padding:26px 0 6px;}
   .day-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;}
@@ -310,6 +325,8 @@
     <div class="rule"></div>
   </header>
 
+  <div class="todaybar" id="todaybar" style="display:none"></div>
+
   <!-- 選んでいる日 -->
   <div class="day">
     <div class="day-head">
@@ -403,7 +420,7 @@
 (function(){
   "use strict";
 
-  var VER = "v6";
+  var VER = "v7";
   var KEY = "beautiful-state-home-v1";
   var WD = ["日","月","火","水","木","金","土"];
 
@@ -750,6 +767,31 @@
   document.getElementById("pBtn").addEventListener("click", addPool);
   pText.addEventListener("keydown", function(e){ if(e.key === "Enter") addPool(); });
 
+  /* ---------- 今日のこと ---------- */
+  function drawToday(){
+    var bar = document.getElementById("todaybar");
+    var r = get(today);
+    var lines = [];
+
+    if(r.castle) lines.push('<div class="tl">城に還る日</div>');
+
+    sortTodos(todosOf(today)).forEach(function(t){
+      if(t.done) return;
+      lines.push('<div class="tl">'
+        + (t.time ? '<span class="tmm">'+esc(t.time)+'</span>' : '')
+        + esc(t.text) + '</div>');
+    });
+
+    if(!lines.length){ bar.style.display = "none"; bar.innerHTML = ""; return; }
+    bar.innerHTML = '<div class="tt">今日</div>' + lines.join("");
+    bar.style.display = "block";
+  }
+
+  document.getElementById("todaybar").addEventListener("click", function(){
+    sel = today; view = sel.slice(0,7);
+    drawDay(); drawPool(); drawCal(); drawBack();
+  });
+
   /* ---------- カレンダー ---------- */
   var calGrid = document.getElementById("calGrid");
 
@@ -794,6 +836,7 @@
             + '</button>';
     }
     calGrid.innerHTML = html;
+    drawToday();
   }
 
   calGrid.addEventListener("click", function(e){
@@ -869,6 +912,17 @@
   var scM = document.getElementById("scMonth"), scA = document.getElementById("scAll");
   scM.addEventListener("click", function(){ scope="month"; scM.classList.add("on"); scA.classList.remove("on"); drawBack(); });
   scA.addEventListener("click", function(){ scope="all";   scA.classList.add("on"); scM.classList.remove("on"); drawBack(); });
+
+  /* ---------- 日をまたいだら、今日を切りかえる ---------- */
+  document.addEventListener("visibilitychange", function(){
+    if(document.hidden) return;
+    var now = ymd(new Date());
+    if(now === today) return;
+    var wasToday = (sel === today);
+    today = now;
+    if(wasToday){ sel = today; view = sel.slice(0,7); }
+    drawDay(); drawPool(); drawCal(); drawBack();
+  });
 
   /* ---------- 新しい版のお知らせ ---------- */
   document.getElementById("ver").textContent = VER;
