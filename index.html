@@ -285,7 +285,7 @@
 
     <button class="castle" id="btnCastle">
       <span class="mark">✓</span>
-      <span id="castleLabel">城に行った</span>
+      <span id="castleLabel">城に還った</span>
       <span class="sub" id="castleSub"></span>
     </button>
 
@@ -462,7 +462,7 @@
     grow(tIntent); grow(tGranted);
 
     var future = sel > today;
-    document.getElementById("castleLabel").textContent = future ? "城に行く" : "城に行った";
+    document.getElementById("castleLabel").textContent = future ? "城に還る" : "城に還った";
     document.getElementById("castleSub").textContent   = future ? "先に置いておく" : "";
     btnCastle.classList.toggle("on", !!r.castle);
 
