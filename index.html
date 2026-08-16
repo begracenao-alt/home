@@ -99,6 +99,69 @@
   }
   .saved.show{opacity:1;}
 
+  /* ------- 自分のためにすること ------- */
+  .todos{margin-top:4px;}
+  .todo{
+    display:flex;align-items:flex-start;gap:11px;padding:12px 2px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .chk{
+    width:25px;height:25px;flex:none;margin-top:2px;border-radius:50%;
+    border:1px solid var(--line);background:none;
+    display:grid;place-items:center;font-size:12px;color:transparent;
+    transition:.18s;padding:0;
+  }
+  .todo.done .chk{background:var(--gold);border-color:var(--gold);color:#191c25;}
+  .todo .body{flex:1;min-width:0;}
+  .todo .tx{font-size:15.5px;line-height:1.7;word-break:break-word;}
+  .todo.done .tx{color:var(--ink-dim);}
+  .todo .tm{
+    font-size:12px;color:var(--gold);letter-spacing:.06em;
+    border:1px solid var(--line);border-radius:999px;padding:1px 8px;
+    margin-right:8px;white-space:nowrap;
+  }
+  .ops{display:flex;gap:6px;margin-top:8px;}
+  .op{
+    font-size:11.5px;color:var(--ink-dim);background:none;
+    border:1px solid var(--line-soft);border-radius:999px;
+    padding:4px 11px;font-family:var(--mincho);
+  }
+  .op.date{padding:0;border:none;}
+  .op.date input{
+    background:none;border:1px solid var(--line-soft);border-radius:999px;
+    color:var(--ink-dim);font-family:var(--mincho);font-size:11.5px;
+    padding:4px 9px;
+  }
+  .addrow{display:flex;gap:8px;margin-top:14px;align-items:stretch;}
+  .addrow input[type="text"]{
+    flex:1;min-width:0;background:var(--ground2);color:var(--ink);
+    border:1px solid var(--line-soft);border-radius:11px;
+    padding:12px 13px;font-size:16px;font-family:var(--mincho);
+  }
+  .addrow input[type="time"]{
+    width:104px;flex:none;background:var(--ground2);color:var(--ink-dim);
+    border:1px solid var(--line-soft);border-radius:11px;
+    padding:12px 8px;font-size:14px;font-family:var(--mincho);
+  }
+  .addrow input:focus{outline:none;border-color:var(--gold-glow);}
+  .addrow input::placeholder{color:rgba(236,229,214,.28);}
+  .addbtn{
+    flex:none;background:var(--gold-soft);border:1px solid var(--line);
+    color:var(--gold);border-radius:11px;padding:0 17px;
+    font-family:var(--mincho);font-size:15px;letter-spacing:.06em;
+  }
+  .none{font-size:13px;color:rgba(236,229,214,.3);padding:12px 2px;}
+  .hint{
+    flex:1;align-self:center;font-size:11.5px;color:rgba(236,229,214,.32);
+    letter-spacing:.03em;line-height:1.5;
+  }
+
+  /* ------- ためておく ------- */
+  .pool{
+    margin-top:32px;border:1px solid var(--line-soft);border-radius:14px;
+    padding:18px 16px 20px;background:rgba(25,28,37,.5);
+  }
+
   /* ------- カレンダー ------- */
   section{margin-top:34px;}
   .sec-title{
@@ -125,7 +188,6 @@
     color:var(--ink);font-family:var(--mincho);font-size:15px;padding:0;
   }
   .cell.blank{visibility:hidden;}
-  .cell.other{color:rgba(236,229,214,.2);}
   .cell.today{border-color:var(--line);}
   .cell.sel{border-color:var(--gold);}
   .cell.castle{
@@ -155,11 +217,11 @@
   .lg-dot{width:17px;flex:none;text-align:center;color:rgba(236,229,214,.75);}
   .lg-star{width:17px;flex:none;text-align:center;color:var(--gold);}
 
-  /* ------- 見返し ------- */
-  .counts{display:flex;gap:10px;margin-bottom:22px;}
+  /* ------- 見返す ------- */
+  .counts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
   .count{
-    flex:1;background:var(--ground2);border:1px solid var(--line-soft);
-    border-radius:12px;padding:15px 8px;text-align:center;
+    background:var(--ground2);border:1px solid var(--line-soft);
+    border-radius:12px;padding:14px 8px;text-align:center;
   }
   .count b{display:block;font-size:25px;color:var(--gold);font-weight:400;line-height:1.3;}
   .count span{font-size:11.5px;color:var(--ink-dim);letter-spacing:.04em;}
@@ -184,6 +246,7 @@
     font-size:14px;margin-top:7px;color:var(--gold);line-height:1.75;
     white-space:pre-wrap;padding-left:14px;border-left:1px solid var(--line);
   }
+  .item .dn{font-size:13.5px;margin-top:6px;color:var(--ink-dim);line-height:1.7;}
   .empty{font-size:13px;color:var(--ink-dim);text-align:center;padding:26px 0;}
 
   footer{
@@ -221,11 +284,35 @@
     </button>
 
     <div class="field">
+      <div class="label">自分のためにすること</div>
+      <div class="todos" id="todos"></div>
+      <div class="addrow">
+        <input type="text" id="aText" placeholder="城のカーテンを見に行く">
+      </div>
+      <div class="addrow">
+        <input type="time" id="aTime" aria-label="時間（書きたいときだけ）">
+        <span class="hint">時間は、決まっているときだけ</span>
+        <button class="addbtn" id="aBtn">入れる</button>
+      </div>
+    </div>
+
+    <div class="field">
       <div class="label">叶ったこと <small>あれば</small></div>
       <textarea id="tGranted" placeholder="叶ったことを、ここに置く"></textarea>
     </div>
 
     <div class="saved" id="saved">書きとめました</div>
+  </div>
+
+  <!-- ためておく -->
+  <div class="pool">
+    <div class="label">ためておく <small>日はまだ決めていない分</small></div>
+    <div class="none" style="padding-top:0">日を決めると、その日に入ります</div>
+    <div class="todos" id="pool"></div>
+    <div class="addrow">
+      <input type="text" id="pText" placeholder="城に買うもの、行きたいところ">
+      <button class="addbtn" id="pBtn">入れる</button>
+    </div>
   </div>
 
   <!-- カレンダー -->
@@ -244,7 +331,7 @@
     </div>
   </section>
 
-  <!-- 見返し -->
+  <!-- 見返す -->
   <section>
     <h2 class="sec-title">見返す</h2>
     <div class="scope">
@@ -255,6 +342,7 @@
       <div class="count"><b id="cIntent">0</b><span>意図を置いた日</span></div>
       <div class="count"><b id="cCastle">0</b><span>城</span></div>
       <div class="count"><b id="cGranted">0</b><span>叶った</span></div>
+      <div class="count"><b id="cDone">0</b><span>自分のためにできたこと</span></div>
     </div>
     <div class="list" id="list"></div>
   </section>
@@ -273,19 +361,25 @@
   var KEY = "beautiful-state-home-v1";
   var WD = ["日","月","火","水","木","金","土"];
 
-  var data = load();
+  var store = load();
   var today = ymd(new Date());
   var sel = today;
-  var view = sel.slice(0,7);   // "YYYY-MM"
+  var view = sel.slice(0,7);
   var scope = "month";
 
   /* ---------- 保存まわり ---------- */
   function load(){
-    try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }
-    catch(e){ return {}; }
+    var raw = null;
+    try{ raw = JSON.parse(localStorage.getItem(KEY)); }catch(e){}
+    if(!raw || typeof raw !== "object") return {days:{}, pool:[]};
+    if(raw.days) {                       // いまの形
+      if(!raw.pool) raw.pool = [];
+      return raw;
+    }
+    return {days: raw, pool: []};        // まえの形からの引きつぎ
   }
   function save(){
-    try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){}
+    try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){}
     flash();
   }
   var flashT;
@@ -296,17 +390,30 @@
     flashT = setTimeout(function(){ el.classList.remove("show"); }, 1400);
   }
   function rec(d){
-    if(!data[d]) data[d] = {intent:"", castle:false, granted:""};
-    return data[d];
+    if(!store.days[d]) store.days[d] = {intent:"", castle:false, granted:"", todos:[]};
+    if(!store.days[d].todos) store.days[d].todos = [];
+    return store.days[d];
+  }
+  function get(d){
+    var r = store.days[d];
+    return r ? r : {intent:"", castle:false, granted:"", todos:[]};
+  }
+  function todosOf(d){
+    var r = store.days[d];
+    return (r && r.todos) ? r.todos : [];
   }
   function has(d){
-    var r = data[d];
+    var r = store.days[d];
     if(!r) return false;
-    return !!(r.intent && r.intent.trim()) || r.castle || !!(r.granted && r.granted.trim());
+    return !!(r.intent && r.intent.trim()) || r.castle
+        || !!(r.granted && r.granted.trim())
+        || !!(r.todos && r.todos.length);
   }
   function tidy(d){
-    var r = data[d];
-    if(r && !has(d)) delete data[d];
+    if(store.days[d] && !has(d)) delete store.days[d];
+  }
+  function uid(){
+    return "i" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
   }
 
   /* ---------- 日付 ---------- */
@@ -322,6 +429,16 @@
     var dt = parse(s);
     return (dt.getMonth()+1) + "月" + dt.getDate() + "日（" + WD[dt.getDay()] + "）";
   }
+  function plus(s, n){
+    var dt = parse(s);
+    dt.setDate(dt.getDate() + n);
+    return ymd(dt);
+  }
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];
+    });
+  }
 
   /* ---------- 選んでいる日 ---------- */
   var tIntent  = document.getElementById("tIntent");
@@ -329,7 +446,7 @@
   var btnCastle= document.getElementById("btnCastle");
 
   function drawDay(){
-    var r = data[sel] || {intent:"", castle:false, granted:""};
+    var r = get(sel);
     document.getElementById("dDate").textContent = jp(sel);
     document.getElementById("dTag").hidden = (sel !== today);
     document.getElementById("btnToday").hidden = (sel === today);
@@ -342,6 +459,8 @@
     document.getElementById("castleLabel").textContent = future ? "城に行く" : "城に行った";
     document.getElementById("castleSub").textContent   = future ? "先に置いておく" : "";
     btnCastle.classList.toggle("on", !!r.castle);
+
+    drawTodos();
   }
 
   function grow(el){
@@ -380,6 +499,149 @@
     window.scrollTo({top:0, behavior:"smooth"});
   });
 
+  /* ---------- 自分のためにすること ---------- */
+  function sortTodos(a){
+    return a.slice().sort(function(x, y){
+      if(!!x.time !== !!y.time) return x.time ? -1 : 1;
+      if(x.time && y.time && x.time !== y.time) return x.time < y.time ? -1 : 1;
+      return 0;
+    });
+  }
+
+  function drawTodos(){
+    var box = document.getElementById("todos");
+    var list = sortTodos(todosOf(sel));
+    if(!list.length){
+      box.innerHTML = '<div class="none">まだ、なにも入っていません</div>';
+      return;
+    }
+    var html = "";
+    list.forEach(function(t){
+      html += '<div class="todo'+(t.done?' done':'')+'" data-id="'+t.id+'">'
+            +   '<button class="chk" data-act="done">✓</button>'
+            +   '<div class="body">'
+            +     '<div class="tx">'
+            +       (t.time ? '<span class="tm">'+esc(t.time)+'</span>' : '')
+            +       esc(t.text)
+            +     '</div>'
+            +     '<div class="ops">'
+            +       '<button class="op" data-act="tomorrow">あすへ</button>'
+            +       '<button class="op" data-act="pool">ためておくへ</button>'
+            +       '<button class="op" data-act="del">消す</button>'
+            +     '</div>'
+            +   '</div>'
+            + '</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  document.getElementById("todos").addEventListener("click", function(e){
+    var b = e.target.closest("[data-act]");
+    if(!b) return;
+    var row = e.target.closest(".todo");
+    var id = row.dataset.id;
+    var arr = rec(sel).todos;
+    var i = arr.findIndex(function(t){ return t.id === id; });
+    if(i < 0) return;
+    var act = b.dataset.act;
+
+    if(act === "done"){
+      arr[i].done = !arr[i].done;
+    } else if(act === "tomorrow"){
+      var t = arr.splice(i,1)[0];
+      t.done = false;
+      rec(plus(sel,1)).todos.push(t);
+    } else if(act === "pool"){
+      var p = arr.splice(i,1)[0];
+      store.pool.push({id:p.id, text:p.text});
+    } else if(act === "del"){
+      if(!confirm("消しますか？")) return;
+      arr.splice(i,1);
+    }
+    tidy(sel);
+    save();
+    drawTodos(); drawPool(); drawCal(); drawBack();
+  });
+
+  var aText = document.getElementById("aText");
+  var aTime = document.getElementById("aTime");
+  function addTodo(){
+    var v = aText.value.trim();
+    if(!v) return;
+    rec(sel).todos.push({id:uid(), text:v, time:aTime.value || "", done:false});
+    aText.value = ""; aTime.value = "";
+    save();
+    drawTodos(); drawCal(); drawBack();
+  }
+  document.getElementById("aBtn").addEventListener("click", addTodo);
+  aText.addEventListener("keydown", function(e){ if(e.key === "Enter") addTodo(); });
+
+  /* ---------- ためておく ---------- */
+  function drawPool(){
+    var box = document.getElementById("pool");
+    if(!store.pool.length){
+      box.innerHTML = '<div class="none">思いついたことを、ここへ</div>';
+      return;
+    }
+    var html = "";
+    store.pool.forEach(function(t){
+      html += '<div class="todo" data-id="'+t.id+'">'
+            +   '<div class="body">'
+            +     '<div class="tx">'+esc(t.text)+'</div>'
+            +     '<div class="ops">'
+            +       '<span class="op date"><input type="date" data-act="pick" aria-label="日を決める"></span>'
+            +       '<button class="op" data-act="del">消す</button>'
+            +     '</div>'
+            +   '</div>'
+            + '</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  function poolIndex(el){
+    var row = el.closest(".todo");
+    if(!row) return -1;
+    return store.pool.findIndex(function(t){ return t.id === row.dataset.id; });
+  }
+
+  document.getElementById("pool").addEventListener("click", function(e){
+    var b = e.target.closest("[data-act]");
+    if(!b || b.dataset.act !== "del") return;
+    var i = poolIndex(b);
+    if(i < 0) return;
+    if(!confirm("消しますか？")) return;
+    store.pool.splice(i,1);
+    save();
+    drawPool();
+  });
+
+  // 日を決めたら、その日へ移して、その日を開く
+  document.getElementById("pool").addEventListener("change", function(e){
+    var inp = e.target.closest('input[data-act="pick"]');
+    if(!inp || !inp.value) return;
+    var i = poolIndex(inp);
+    if(i < 0) return;
+    var d = inp.value;
+    var t = store.pool.splice(i,1)[0];
+    rec(d).todos.push({id:t.id, text:t.text, time:"", done:false});
+    sel = d; view = d.slice(0,7);
+    save();
+    drawDay(); drawPool(); drawCal(); drawBack();
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+
+  var pText = document.getElementById("pText");
+  function addPool(){
+    var v = pText.value.trim();
+    if(!v) return;
+    store.pool.push({id:uid(), text:v});
+    pText.value = "";
+    save();
+    drawPool();
+  }
+  document.getElementById("pBtn").addEventListener("click", addPool);
+  pText.addEventListener("keydown", function(e){ if(e.key === "Enter") addPool(); });
+
   /* ---------- カレンダー ---------- */
   var calGrid = document.getElementById("calGrid");
 
@@ -401,15 +663,16 @@
 
     for(var d=1; d<=days; d++){
       var key = y + "-" + (m<10?"0":"") + m + "-" + (d<10?"0":"") + d;
-      var r = data[key] || {};
+      var r = store.days[key] || {};
       var c = "cell";
       if(r.castle) c += " castle";
       if(key === today) c += " today";
       if(key === sel)   c += " sel";
+      var dotted = (r.intent && r.intent.trim()) || (r.todos && r.todos.length);
       html += '<button class="'+c+'" data-d="'+key+'">'
             +   '<span class="n">'+d+'</span>'
             +   (r.granted && r.granted.trim() ? '<span class="star">✦</span>' : '')
-            +   (r.intent  && r.intent.trim()  ? '<span class="dot"></span>'   : '')
+            +   (dotted ? '<span class="dot"></span>' : '')
             + '</button>';
     }
     calGrid.innerHTML = html;
@@ -419,7 +682,7 @@
     var b = e.target.closest(".cell");
     if(!b || !b.dataset.d) return;
     sel = b.dataset.d;
-    drawDay(); drawCal();
+    drawDay(); drawCal(); drawPool();
     window.scrollTo({top:0, behavior:"smooth"});
   });
 
@@ -435,23 +698,25 @@
 
   /* ---------- 見返す ---------- */
   function keys(){
-    var all = Object.keys(data).sort().reverse();
+    var all = Object.keys(store.days).sort().reverse();
     if(scope === "all") return all;
     return all.filter(function(k){ return k.slice(0,7) === view; });
   }
 
   function drawBack(){
     var ks = keys();
-    var ci=0, cc=0, cg=0;
+    var ci=0, cc=0, cg=0, cd=0;
     ks.forEach(function(k){
-      var r = data[k];
+      var r = store.days[k];
       if(r.intent && r.intent.trim()) ci++;
       if(r.castle) cc++;
       if(r.granted && r.granted.trim()) cg++;
+      (r.todos||[]).forEach(function(t){ if(t.done) cd++; });
     });
     document.getElementById("cIntent").textContent  = ci;
     document.getElementById("cCastle").textContent  = cc;
     document.getElementById("cGranted").textContent = cg;
+    document.getElementById("cDone").textContent    = cd;
 
     var list = document.getElementById("list");
     if(!ks.length){
@@ -460,12 +725,15 @@
     }
     var html = "";
     ks.forEach(function(k){
-      var r = data[k];
-      var head = jp(k) + (r.castle ? "　城" : "");
+      var r = store.days[k];
+      var done = (r.todos||[]).filter(function(t){ return t.done; });
       html += '<button class="item" data-d="'+k+'">'
-            +   '<div class="d">'+head+'</div>'
+            +   '<div class="d">'+jp(k)+(r.castle ? "　城" : "")+'</div>'
             +   (r.intent && r.intent.trim() ? '<div class="t">'+esc(r.intent)+'</div>' : '')
             +   (r.granted && r.granted.trim() ? '<div class="g">✦ '+esc(r.granted)+'</div>' : '')
+            +   (done.length ? '<div class="dn">'+done.map(function(t){
+                  return "✓ " + esc(t.text);
+                }).join("<br>")+'</div>' : '')
             + '</button>';
     });
     list.innerHTML = html;
@@ -476,7 +744,7 @@
     if(!b) return;
     sel = b.dataset.d;
     view = sel.slice(0,7);
-    drawDay(); drawCal(); drawBack();
+    drawDay(); drawCal(); drawPool(); drawBack();
     window.scrollTo({top:0, behavior:"smooth"});
   });
 
@@ -484,14 +752,8 @@
   scM.addEventListener("click", function(){ scope="month"; scM.classList.add("on"); scA.classList.remove("on"); drawBack(); });
   scA.addEventListener("click", function(){ scope="all";   scA.classList.add("on"); scM.classList.remove("on"); drawBack(); });
 
-  function esc(s){
-    return String(s).replace(/[&<>"]/g, function(c){
-      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];
-    });
-  }
-
   /* ---------- はじめ ---------- */
-  drawDay(); drawCal(); drawBack();
+  drawDay(); drawPool(); drawCal(); drawBack();
 })();
 </script>
 </body>
