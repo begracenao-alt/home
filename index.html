@@ -33,7 +33,7 @@
     font-family:var(--mincho);
     line-height:1.85;
     -webkit-font-smoothing:antialiased;
-    padding:env(safe-area-inset-top, 0px) 0 64px;
+    padding:env(safe-area-inset-top, 0px) 0 96px;
   }
   .wrap{max-width:520px;margin:0 auto;padding:0 20px;}
 
@@ -312,6 +312,30 @@
   .item .dn{font-size:13.5px;margin-top:6px;color:var(--ink-dim);line-height:1.7;}
   .empty{font-size:13px;color:var(--ink-dim);text-align:center;padding:26px 0;}
 
+  /* ------- 下の切りかえ ------- */
+  .tabs{
+    position:fixed;left:0;right:0;bottom:0;z-index:8;display:flex;
+    background:rgba(15,17,23,.94);border-top:1px solid var(--line-soft);
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  }
+  .tabs button{
+    flex:1;background:none;border:none;color:var(--ink-dim);
+    font-family:var(--mincho);font-size:14.5px;letter-spacing:.1em;
+    padding:15px 0 14px;
+  }
+  .tabs button.on{color:var(--gold);box-shadow:inset 0 2px 0 var(--gold);}
+
+  /* ------- ためておく（たたむ） ------- */
+  .poolhead{
+    width:100%;display:flex;align-items:center;gap:10px;
+    background:none;border:none;padding:2px 0;
+    font-family:var(--mincho);font-size:14.5px;color:var(--gold);
+    letter-spacing:.12em;text-align:left;
+  }
+  .poolhead .pcount{font-size:12.5px;color:var(--ink-dim);letter-spacing:.04em;}
+  .poolhead .arrow{margin-left:auto;font-size:13px;color:var(--ink-dim);}
+
   footer{
     margin-top:44px;text-align:center;font-size:11.5px;color:rgba(242,236,224,.45);
     letter-spacing:.06em;line-height:2;
@@ -327,6 +351,8 @@
     <p class="logo-sub">意図したことは、叶う</p>
     <div class="rule"></div>
   </header>
+
+  <div class="panel" id="panel-today">
 
   <div class="todaybar" id="todaybar" style="display:none"></div>
 
@@ -369,7 +395,13 @@
 
   <!-- ためておく -->
   <div class="pool">
-    <div class="label">ためておく <small>日はまだ決めていない分</small></div>
+    <button class="poolhead" id="poolHead">
+      <span>ためておく</span>
+      <span class="pcount" id="poolCount"></span>
+      <span class="arrow" id="poolArrow">▾</span>
+    </button>
+    <div id="poolBody" hidden>
+    <div class="hint2" style="margin-top:2px">日はまだ決めていない分</div>
     <div class="addrow" style="margin-top:6px">
       <input type="text" id="pText" placeholder="城に買うもの、行きたいところ">
       <button class="addbtn" id="pBtn">入れる</button>
@@ -378,9 +410,13 @@
     <div class="poolmsg" id="poolMsg" style="display:none"></div>
     <div class="split"></div>
     <div class="todos" id="pool"></div>
+    </div>
   </div>
 
+  </div><!-- /今日の板 -->
+
   <!-- カレンダー -->
+  <div class="panel" id="panel-cal" hidden>
   <section>
     <h2 class="sec-title">カレンダー</h2>
     <div class="cal-head">
@@ -396,8 +432,10 @@
       <div><span class="lg-star">✦</span>右上の印 ＝ 叶った日</div>
     </div>
   </section>
+  </div><!-- /カレンダーの板 -->
 
   <!-- 見返す -->
+  <div class="panel" id="panel-back" hidden>
   <section>
     <h2 class="sec-title">見返す</h2>
     <div class="scope">
@@ -417,14 +455,21 @@
     書いたものは、この端末の中だけに残ります<br>
     beautiful state HOME　<span id="ver"></span>
   </footer>
+  </div><!-- /見返すの板 -->
 
 </div>
+
+<nav class="tabs">
+  <button data-p="today" class="on">今日</button>
+  <button data-p="cal">カレンダー</button>
+  <button data-p="back">見返す</button>
+</nav>
 
 <script>
 (function(){
   "use strict";
 
-  var VER = "v8";
+  var VER = "v9";
   var KEY = "beautiful-state-home-v1";
   var WD = ["日","月","火","水","木","金","土"];
 
@@ -695,6 +740,7 @@
     var box = document.getElementById("pool");
     if(!store.pool.length){
       box.innerHTML = '<div class="none">入れたものが、ここにたまります</div>';
+      drawPoolHead();
       return;
     }
     var html = "";
@@ -711,6 +757,7 @@
             + '</div>';
     });
     box.innerHTML = html;
+    drawPoolHead();
   }
 
   function poolIndex(el){
@@ -850,7 +897,7 @@
     if(!b || !b.dataset.d) return;
     sel = b.dataset.d;
     drawDay(); drawCal(); drawPool();
-    window.scrollTo({top:0, behavior:"smooth"});
+    show("today");
   });
 
   document.getElementById("prevM").addEventListener("click", function(){ shift(-1); });
@@ -912,12 +959,39 @@
     sel = b.dataset.d;
     view = sel.slice(0,7);
     drawDay(); drawCal(); drawPool(); drawBack();
-    window.scrollTo({top:0, behavior:"smooth"});
+    show("today");
   });
 
   var scM = document.getElementById("scMonth"), scA = document.getElementById("scAll");
   scM.addEventListener("click", function(){ scope="month"; scM.classList.add("on"); scA.classList.remove("on"); drawBack(); });
   scA.addEventListener("click", function(){ scope="all";   scA.classList.add("on"); scM.classList.remove("on"); drawBack(); });
+
+  /* ---------- 画面の切りかえ（今日／カレンダー／見返す） ---------- */
+  function show(name){
+    ["today","cal","back"].forEach(function(k){
+      document.getElementById("panel-"+k).hidden = (k !== name);
+    });
+    var bs = document.querySelectorAll(".tabs button");
+    for(var i=0;i<bs.length;i++){
+      bs[i].classList.toggle("on", bs[i].dataset.p === name);
+    }
+    window.scrollTo(0,0);
+  }
+  document.querySelector(".tabs").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-p]");
+    if(b) show(b.dataset.p);
+  });
+
+  /* ---------- ためておく（たたむ） ---------- */
+  function drawPoolHead(){
+    var n = store.pool.length;
+    document.getElementById("poolCount").textContent = n ? "（" + n + "）" : "";
+  }
+  document.getElementById("poolHead").addEventListener("click", function(){
+    var body = document.getElementById("poolBody");
+    body.hidden = !body.hidden;
+    document.getElementById("poolArrow").textContent = body.hidden ? "▾" : "▴";
+  });
 
   /* ---------- 日をまたいだら、今日を切りかえる ---------- */
   document.addEventListener("visibilitychange", function(){
